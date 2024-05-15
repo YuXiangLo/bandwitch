@@ -1,0 +1,2 @@
+default via 10.0.2.2 dev enp0s3 proto dhcp metric 105
+default via 192.168.204.254 dev enp0s8 proto dhcp metric 101
