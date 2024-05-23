@@ -1,7 +1,22 @@
 ## client
 
 ```sh
-iperf3 -t 5 -c 140.112.30.186 -i enp0s3 -R && iperf3 -t 5 -c 140.112.30.186 -i enp0s3
+iperf3 -t 5 -c 140.112.30.186 --bind-dev enp0s3 -R && iperf3 -t 5 -c 140.112.30.186 --bind-dev enp0s3
+```
+
+useful options
+```
+-f, --format
+              [kmgtKMGT]   format to report: Kbits/Mbits/Gbits/Tbits
+-J, --json
+              output in JSON format
+-P, --parallel n
+              number  of  parallel client streams to run. iperf3 will spawn off a separate thread
+              for each test stream. Using multiple streams may result in higher throughput than a
+              single stream.
+--dscp dscp
+              set the IP DSCP bits.  Both numeric and symbolic values are accepted. Numeric  val‐
+              ues can be specified in decimal, octal and hex (see --tos above).
 ```
 
 output
@@ -30,5 +45,5 @@ Connecting to host 140.112.30.186, port 5201
 ## server
 
 ```sh
-iperf3 -s -i net0.30@net0
+iperf3 -s -B 140.112.30.186 --bind-dev net0.30
 ```
