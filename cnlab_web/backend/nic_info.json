@@ -1,0 +1,26 @@
+[
+  {
+    "interface": "lo",
+    "ip": "127.0.0.1",
+    "netmask": "255.0.0.0",
+    "gateway": null
+  },
+  {
+    "interface": "enp0s3",
+    "ip": "10.0.2.15",
+    "netmask": "255.255.255.0",
+    "gateway": "10.0.2.2"
+  },
+  {
+    "interface": "enp0s8",
+    "ip": "192.168.204.81",
+    "netmask": "255.255.255.0",
+    "gateway": "192.168.204.254"
+  },
+  {
+    "interface": "enp0s9",
+    "ip": "192.168.1.254",
+    "netmask": "255.255.255.0",
+    "gateway": null
+  }
+]
