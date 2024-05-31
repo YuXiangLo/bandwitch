@@ -3,12 +3,11 @@
 SERVER_IP="140.112.30.186"
 DURATION=1
 NIC="wlx2887ba25c83d"
-IPERF3="/home/routerserver/Downloads/iperf-3.17.1/src/iperf3"
 
 # Run iperf3 for upload and download tests and capture the output
-UPLOAD_RESULT=$($IPERF3 -J -t $DURATION -c $SERVER_IP)
+UPLOAD_RESULT=$(iperf3 -J -t $DURATION -c $SERVER_IP)
 sleep 1
-DOWNLOAD_RESULT=$($IPERF3 -J -t $DURATION -c $SERVER_IP -R)
+DOWNLOAD_RESULT=$(iperf3 -J -t $DURATION -c $SERVER_IP -R)
 
 # Extract the upload speed (bits_per_second) from the upload result
 UPLOAD_SPEED=$(echo $UPLOAD_RESULT | jq '.end.sum_sent.bits_per_second')

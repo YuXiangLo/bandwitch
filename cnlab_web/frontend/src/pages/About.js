@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { styled } from '@mui/material/styles';
 import { Box } from '@mui/material';
+import axios from 'axios';
 
 import CpuMonitor from "../components/CpuMonitor";
 import NetworkMonitor from "../components/NetworkMonitor";
 import NetworkSpeed from "../components/NetworkSpeed";
-import useAuth from '../hooks/useAuth';
 
 // Create a styled Box component with a grey background
 const StyledBox = styled(Box)({
@@ -13,20 +13,36 @@ const StyledBox = styled(Box)({
     width: '100vw', // Full viewport width
     height: '100vh', // Full viewport height
     display: 'flex',
-    flexDirection: 'column',
+	flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center'
 });
 
-const NIC1 = process.env.REACT_APP_NIC1;
-const NIC2 = process.env.REACT_APP_NIC2;
+const backendapi = process.env.REACT_APP_BACKEND_API;
 
 function HomePage() {
+    const [nics, setNics] = useState([]);
+
+    useEffect(() => {
+        // Fetch the list of NICs from the backend
+        const fetchNics = async () => {
+            try {
+                const response = await axios.get(`${backendapi}/nics`); // Adjust the URL to match your server configuration
+                setNics(response.data);
+            } catch (error) {
+                console.error('Error fetching NICs:', error);
+            }
+        };
+
+        fetchNics();
+    }, []);
+
     return (
         <StyledBox>
             <CpuMonitor width="60%" height="40%" />
-            <NetworkMonitor nic={NIC1} width="60%" height="25%" />
-            <NetworkMonitor nic={NIC2} width="60%" height="25%" />
+            {nics.map(nic => (
+                <NetworkMonitor key={nic} nic={nic} width="60%" height="25%" />
+            ))}
             <NetworkSpeed />
         </StyledBox>
     );

@@ -7,8 +7,8 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 # Install ISC DHCP server if not already installed
-apt-get update
-apt-get install -y isc-dhcp-server vim
+#apt-get update
+#apt-get install -y isc-dhcp-server vim
 
 
 #disable NetworkManager
@@ -18,7 +18,7 @@ systemctl stop NetworkManager
 dhcp_conf="/etc/dhcp/dhcpd.conf"
 
 # Define DHCP server interface
-server_interface="enp0s9"  # Change this to match your server's interface
+server_interface="enx00e04c362790"  # Change this to match your server's interface
 
 #interface
 ip addr add 192.168.1.254/24 dev ${server_interface}
