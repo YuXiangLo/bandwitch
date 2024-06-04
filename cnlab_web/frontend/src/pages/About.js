@@ -1,52 +1,55 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { styled } from '@mui/material/styles';
-import { Box } from '@mui/material';
+import { Box, useMediaQuery, Typography } from '@mui/material';
 import axios from 'axios';
 
-import CpuMonitor from "../components/CpuMonitor";
 import NetworkMonitor from "../components/NetworkMonitor";
-import NetworkSpeed from "../components/NetworkSpeed";
+import NetworkMonitorMobile from "../components/NetworkMonitorMobile";
+import { AppContext } from '../context/AppContext';
 
 // Create a styled Box component with a grey background
 const StyledBox = styled(Box)({
     backgroundColor: '#272727', // Light grey color
     width: '100vw', // Full viewport width
-    height: '100vh', // Full viewport height
+    minHeight: '100vh', // Full viewport height
     display: 'flex',
 	flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: 'center'
+	paddingTop: '70px'
 });
 
 const backendapi = process.env.REACT_APP_BACKEND_API;
 
 function HomePage() {
+    const { setIP } = useContext(AppContext);
     const [nics, setNics] = useState([]);
+	const isMobile = useMediaQuery('(max-width:1000px)'); // Define the breakpoint for mobile devices
 
-    useEffect(() => {
-        // Fetch the list of NICs from the backend
-        const fetchNics = async () => {
-            try {
-                const response = await axios.get(`${backendapi}/nics`); // Adjust the URL to match your server configuration
-                setNics(response.data);
-            } catch (error) {
-                console.error('Error fetching NICs:', error);
-            }
-        };
+	useEffect(() => {
+		// Fetch the list of NICs from the backend
+		const fetchNics = async () => {
+			const response = await axios.get(`${backendapi}/nics`);
+			console.log(response);
+			setNics(response.data.nics);
+			setIP(String(response.data.ip));
+		};
 
         fetchNics();
-    }, []);
+    }, [setIP]);
 
     return (
-        <StyledBox>
-            <CpuMonitor width="60%" height="40%" />
+		<StyledBox>
+			<Typography variant="h4" sx={{ color: '#ffffff', margin: '20px 0' }}>
+                Network Monitor
+            </Typography>
             {nics.map(nic => (
-                <NetworkMonitor key={nic} nic={nic} width="60%" height="25%" />
+                isMobile ?
+                <NetworkMonitorMobile key={nic} nic={nic} width="100%" height="30%" />
+                :
+                <NetworkMonitor key={nic} nic={nic} width="60vw" height="25vh" />
             ))}
-            <NetworkSpeed />
         </StyledBox>
     );
 }
 
 export default HomePage;
-

@@ -7,8 +7,7 @@ export const AppProvider = ({ children }) => {
     const [averageCpuUsage, setAverageCpuUsage] = useState(0);
     const [networkData, setNetworkData] = useState({});
     const [loading, setLoading] = useState(true);
-    const [speedData, setSpeedData] = useState({ download_speed: 0, upload_speed: 0 });
-	const [user, setUser] = useState({ User: '', IP:'', NICs: [] })
+	const [IP, setIP] = useState('')
 
     return (
         <AppContext.Provider value={{
@@ -16,8 +15,7 @@ export const AppProvider = ({ children }) => {
             averageCpuUsage, setAverageCpuUsage,
             networkData, setNetworkData,
 			loading, setLoading,
-			speedData, setSpeedData,
-			user, setUser
+			IP, setIP
         }}>
             {children}
         </AppContext.Provider>

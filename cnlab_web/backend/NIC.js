@@ -16,6 +16,7 @@ const getGateway = (interfaceName) => {
 
 function networkInterfaces(routerNic) {
   const interfaces = os.networkInterfaces();
+  console.log("interfaces", interfaces);
   let result = [];
   Object.keys(interfaces).forEach((interfaceName) => {
     interfaces[interfaceName].forEach((interfaceInfo) => {

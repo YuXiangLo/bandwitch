@@ -6,7 +6,7 @@ VIDEO_CLASS="1:2"
 GAME_CLASS="1:3"
 
 VIDEO_DSCP="0x24"
-GAME_DSCP="0x32"
+GAME_DSCP="0x30"
 
 
 initialize_entry(){
@@ -18,11 +18,12 @@ initialize_entry(){
 
 
 	tclass(){
-		tc class add dev $DEVICE parent 1:0 classid $1 htb rate $2 ceil 10mbit burst 15k
+		tc class add dev $DEVICE parent 1:0 classid $1 htb rate $2 ceil 1gbit burst 15k
 	}
 
 	tclass $VIDEO_CLASS 10mbit
-	tclass $GAME_CLASS 10mbit
+	tclass $GAME_CLASS 20mbit
+	tc class add dev $DEVICE parent 1:0 classid 1:5  htb rate $2 ceil 1gbit burst 15k
 }
 
 

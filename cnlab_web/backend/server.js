@@ -12,7 +12,7 @@ const host = "192.168.1.254"; // Change this to your NIC's IP address
 // arar
 
 const corsOptions = {
-  origin: `http://192.168.1.254:3000`,
+  origin: true,
   methods: ["GET", "POST"],
   allowedHeaders: ["Content-Type"],
   credentials: true,
@@ -21,8 +21,22 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
 
+//dhcp
+
+/*
+exec("./dhcp_hotspot.sh", (error, stdout, stderr) => {
+  if (error) {
+    console.error(`exec error: ${error}`);
+  }
+  if (stderr) {
+    console.error(`stderr: ${stderr}`);
+  }
+  console.log(`stdout: ${stdout}`);
+});
+*/
+
+ROUTER_NIC = "wlo1";
 let networkDict = {};
-ROUTER_NIC = "enx00e04c362790";
 const networkInterfaces = require("./NIC.js");
 networkInterfaces(ROUTER_NIC).forEach((interfaceInfo) => {
   networkDict[interfaceInfo.interface] = {
@@ -32,13 +46,13 @@ networkInterfaces(ROUTER_NIC).forEach((interfaceInfo) => {
   };
 });
 
+// routing
 const {
   sysctl,
   configureIpRoute,
   addlocalRouteTables,
   configureMasquerade,
 } = require("./setup.js");
-
 sysctl();
 configureIpRoute(ROUTER_NIC);
 const gateways = Object.keys(networkDict).map((key) => {
@@ -48,6 +62,48 @@ console.log(gateways, Object.keys(networkDict));
 addlocalRouteTables(gateways);
 configureMasquerade(Object.keys(networkDict));
 
+// speed
+speedTest = require("./speed.js");
+let networkSpeedResults = {};
+
+const speedTestFunction = async () => {
+  const nics = Object.keys(networkDict);
+  let serverIp = ["140.112.30.186", "140.112.30.188", "140.112.30.189"];
+  for (i = 0; i < nics.length; i++) {
+    const nic = nics[i];
+    const sip = serverIp[i % 3];
+    try {
+      networkSpeedResults[nic] = await speedTest(sip, "10", nic);
+      console.log(networkSpeedResults[nic]);
+    } catch (err) {
+      console.error(err);
+      networkSpeedResults[nic] = { download_speed: 0, upload_speed: 0 };
+    }
+  }
+};
+
+// Execute immediately
+speedTestFunction();
+
+// Then execute every 2 minutes
+setInterval(speedTestFunction, 2 * 60 * 1000);
+
+app.get("/network-speed", (req, res) => {
+  const nic = req.query.nic;
+
+  if (!nic) {
+    return res.status(400).send("NIC name is required");
+  }
+
+  if (!networkSpeedResults[nic]) {
+    return res
+      .status(404)
+      .send("No speed test result found for the requested NIC");
+  }
+
+  res.setHeader("Content-Type", "application/json");
+  res.send(networkSpeedResults[nic]);
+});
 //init end
 
 const wss = new WebSocket.Server({ host, port: 8080 });
@@ -90,8 +146,6 @@ wss.on("connection", function connection(ws) {
   });
 });
 
-console.log(`Server started on ${host}:8080`);
-
 async function updateUserNICs(username, nic, action, ip_last) {
   const filepath = `./data/${ip_last}.json`;
   console.log("user filepath", filepath);
@@ -116,21 +170,32 @@ app.post("/turn_on", async (req, res) => {
   const ip_last = req.ip.match(/(\d+)$/)[1];
   const { nic, username } = req.body;
   console.log(`${ip_last} Turning on ${nic}`);
-  nics = await updateUserNICs(username, nic, "add", ip_last);
+  const nics = await updateUserNICs(username, nic, "add", ip_last);
   console.log("nics", nics);
-  if (nics) update_IP_table(ip_last, nics, res);
+  if (nics) update_route_table(ip_last, nics, res);
 });
 
 app.post("/turn_off", async (req, res) => {
   const ip_last = req.ip.match(/(\d+)$/)[1];
   const { nic, username } = req.body;
   console.log(`${ip_last} Turning off ${nic}`);
-  nics = await updateUserNICs(username, nic, "remove", ip_last);
+  const nics = await updateUserNICs(username, nic, "remove", ip_last);
   console.log("nics", nics);
-  if (nics) update_IP_table(ip_last, nics, res);
+  if (nics) update_route_table(ip_last, nics, res);
 });
 
-const update_IP_table = (ip_last, nics, res) => {
+app.get("/get_setting", (req, res) => {
+  const ip_last = req.ip.match(/(\d+)$/)[1];
+  const nic = req.query.nic;
+  const filepath = `./data/${ip_last}.json`;
+  console.log("user filepath", filepath);
+  data = fs.readFileSync(filepath);
+  let user = JSON.parse(data);
+  res.setHeader("Content-Type", "application/text");
+  res.send(user.NICs.includes(nic));
+});
+
+const update_route_table = (ip_last, nics, res) => {
   const jsonFilePath = `data/${ip_last}.json`;
   let command = `ip route del default table ${ip_last}; ip route add table ${ip_last} default proto static `;
 
@@ -151,66 +216,35 @@ const update_IP_table = (ip_last, nics, res) => {
   });
 };
 
-app.post("/login", (req, res) => {
-  const { username, password } = req.body;
-
-  fs.readFile("data/password.json", "utf8", (err, data) => {
-    if (err) {
-      console.error(`File read error: ${err}`);
-      res.status(500).send("Internal Server Error");
-      return;
-    }
-
-    const users = JSON.parse(data);
-    const user = users.find(
-      (u) => u.Account === username && u.Password === password
-    );
-
-    if (user) {
-      res.json({ success: true, username });
-    } else {
-      res.json({ success: false });
-    }
-  });
-});
-
-app.get("/user/:username", (req, res) => {
-  const username = req.params.username;
-  const filepath = `./data/${username}.json`;
-
-  fs.readFile(filepath, "utf8", (err, data) => {
-    if (err) {
-      console.error(`File read error: ${err}`);
-      res.status(404).send("User not found");
-      return;
-    }
-    res.setHeader("Content-Type", "application/json");
-    res.send(data);
-  });
-});
-
-app.get("/network-speed", async (req, res) => {
-  try {
-    const data = fs.readFileSync("speed.json", "utf8");
-    console.log(data);
-    res.setHeader("Content-Type", "application/json");
-    res.send(data);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Internal Server Error");
-  }
-});
+const userRoutes = require("./userRoutes.js");
+app.use(userRoutes);
 
 app.get("/nics", (req, res) => {
   const nics = Object.keys(networkDict);
+  const ip = req.ip;
+  console.log("ip:", req.ip);
   console.log(nics);
-  res.json(nics);
+  res.json({ ip, nics });
 });
+
+app.get("/ip", (req, res) => {
+  res.setHeader("Content-Type", "application/text");
+  res.send(req.ip);
+});
+
 app.get("/", (req, res) => {
   res.setHeader("Content-Type", "application/json");
   res.send("Hello");
 });
 
+/*
 app.listen(port, host, () => {
   console.log(`HTTP server started on http://${host}:${port}`);
 });
+*/
+
+setTimeout(() => {
+  app.listen(port, host, () => {
+    console.log(`HTTP server started on http://${host}:${port}`);
+  });
+}, 20 * 1000); // Delay for 20 seconds

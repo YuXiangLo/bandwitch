@@ -2,7 +2,7 @@ const { exec } = require('child_process');
 const fs = require('fs');
 
 let connectedIPs = [];
-const default_content='{"NICs": ["enp0s3","enp0s8"]}'
+const default_content='{"NICs": ["enx6a568d3e01c8","enxaa817ed7ad0c"]}'
 
 // Function to parse the output of dhcp-lease-list command
 function parseLeaseList(output) {

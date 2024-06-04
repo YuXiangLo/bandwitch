@@ -25,7 +25,7 @@ def get_network_rates(interface, interval=1):
             "bytes_recv_per_sec": round(bytes_recv_per_sec, 2)}
 
 def main():
-    interfaces = ['enp0s3', 'enp0s8']  # List of network interfaces to monitor
+    interfaces = psutil.net_io_counters(pernic=True).keys()
     network_info = {"type": "network", "data": {}}
 
     for interface in interfaces:

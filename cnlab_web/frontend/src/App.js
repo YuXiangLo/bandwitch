@@ -1,9 +1,8 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
-import Login from "./pages/Login";
+import Welcome from "./pages/Welcome";
 import About from "./pages/About";
 import About2 from "./pages/About2";
-import About3 from "./pages/About3";
 import NavBar from "./components/NavBar";
 import { AppProvider } from './context/AppContext';
 
@@ -12,13 +11,12 @@ function Layout() {
 
   return (
     <>
-      <NavBar />
+	  <NavBar display={location.pathname === '/about' || location.pathname === '/about2' ? '' : 'none'}/>
       <Routes>
-        <Route path="/" element={<About />} />
+        <Route path="/" element={<Welcome />} />
         <Route path="/about" element={<About />} />
         <Route path="/about2" element={<About2 />} />
-        <Route path="/about3" element={<About3 />} />
-        <Route path="*" element={<Login />} />
+        <Route path="*" element={<Welcome />} />
       </Routes>
     </>
   );

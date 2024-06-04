@@ -1,5 +1,5 @@
 # Define device name variable
-DEVICE=enp0s1
+DEVICE=enx00e04c362790
 
 # Define the total bandwidth allowed on the device
 TOTAL_BANDWIDTH=2.0gbit
@@ -24,11 +24,11 @@ tc qdisc del dev $DEVICE root
 tc qdisc add dev $DEVICE root handle 1: htb default 9
 
 # Define total bandwidth
-tc class add dev $DEVICE parent 1: classid 1:10 htb rate $TOTAL_BANDWIDTH burst BURST
+tc class add dev $DEVICE parent 1: classid 1:10 htb rate $TOTAL_BANDWIDTH burst $BURST
 
 # Define traffic control classes
 tclass() {
-    tc class add dev $DEVICE parent 1:10 classid $1 htb rate $2 ceil $3 burst BURST
+    tc class add dev $DEVICE parent 1:10 classid $1 htb rate $2 ceil $3 burst $BURST
 }
 
 # Define rate and ceil for each class
@@ -46,8 +46,8 @@ AF2_RATE=200mbit
 AF2_CEIL=400mbit
 AF1_RATE=200mbit
 AF1_CEIL=400mbit
-BE_RATE=100mbit
-BE_CEIL=1.5gbit
+BE_RATE=1mbit
+BE_CEIL=10mbit
 
 tclass $TC_CLASS_CS6 $CS6_RATE $CS6_CEIL 
 tclass $TC_CLASS_CS7 $CS7_RATE $CS7_CEIL
