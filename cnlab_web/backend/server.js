@@ -223,7 +223,7 @@ app.get("/get_setting", (req, res) => {
 
 const update_route_table = (ip_last, nics, res) => {
   const jsonFilePath = `data/${ip_last}.json`;
-  let command = `ip route del default table main; ip route add table main default proto static `;
+  let command = `ip route del default table ${ip_last}; ip route add table ${ip_last} default proto static `;
 
   for (let i = 0; i < nics.length; i++) {
     command += ` nexthop via ${networkDict[nics[i]].gateway} dev ${
