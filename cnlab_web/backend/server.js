@@ -1,5 +1,5 @@
 const WebSocket = require("ws");
-const { exec } = require("child_process");
+const { exec, execSync } = require("child_process");
 const fs = require("fs");
 const express = require("express");
 const cors = require("cors");
@@ -22,8 +22,12 @@ app.use(cors(corsOptions));
 app.use(bodyParser.json());
 
 //dhcp
-
 /*
+try {
+  execSync("bash default.sh");
+} catch (error) {}
+*/
+
 exec("./dhcp_hotspot.sh", (error, stdout, stderr) => {
   if (error) {
     console.error(`exec error: ${error}`);
@@ -33,7 +37,6 @@ exec("./dhcp_hotspot.sh", (error, stdout, stderr) => {
   }
   console.log(`stdout: ${stdout}`);
 });
-*/
 
 ROUTER_NIC = "wlo1";
 let networkDict = {};
@@ -45,6 +48,18 @@ networkInterfaces(ROUTER_NIC).forEach((interfaceInfo) => {
     gateway: interfaceInfo.gateway,
   };
 });
+
+for (let i = 20; i <= 29; i++) {
+  const data = {
+    NICs: Object.keys(networkDict),
+  };
+
+  fs.writeFile(`./data/${i}.json`, JSON.stringify(data, null, 2), (err) => {
+    if (err) {
+      console.error(`Error writing file: ${err}`);
+    }
+  });
+}
 
 // routing
 const {
@@ -85,8 +100,19 @@ const speedTestFunction = async () => {
 // Execute immediately
 speedTestFunction();
 
+/*
+try {
+  execSync("bash deldefault.sh");
+} catch (error) {}
+*/
 // Then execute every 2 minutes
-setInterval(speedTestFunction, 2 * 60 * 1000);
+const intervalId = setInterval(speedTestFunction, 2 * 60 * 1000);
+
+app.get("/cancel-speedtest", (req, res) => {
+  clearInterval(intervalId);
+  res.status(200);
+  res.send("Speed test cancelled");
+});
 
 app.get("/network-speed", (req, res) => {
   const nic = req.query.nic;
@@ -197,7 +223,7 @@ app.get("/get_setting", (req, res) => {
 
 const update_route_table = (ip_last, nics, res) => {
   const jsonFilePath = `data/${ip_last}.json`;
-  let command = `ip route del default table ${ip_last}; ip route add table ${ip_last} default proto static `;
+  let command = `ip route del default table main; ip route add table main default proto static `;
 
   for (let i = 0; i < nics.length; i++) {
     command += ` nexthop via ${networkDict[nics[i]].gateway} dev ${
@@ -237,14 +263,14 @@ app.get("/", (req, res) => {
   res.send("Hello");
 });
 
-/*
 app.listen(port, host, () => {
   console.log(`HTTP server started on http://${host}:${port}`);
 });
-*/
 
+/*
 setTimeout(() => {
   app.listen(port, host, () => {
     console.log(`HTTP server started on http://${host}:${port}`);
   });
 }, 20 * 1000); // Delay for 20 seconds
+*/

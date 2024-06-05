@@ -88,7 +88,7 @@ function NetworkMonitor({ nic, width = "100%", height = "100%" }) {
         direction="row"
         spacing={2}
         sx={{
-          width: "90%",
+          width: "120%",
           justifyContent: "space-around",
           flexGrow: 1,
           alignItems: "center",
@@ -99,7 +99,7 @@ function NetworkMonitor({ nic, width = "100%", height = "100%" }) {
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            width: "20%",
+            width: "5%",
           }}
         >
           <Typography
@@ -153,6 +153,7 @@ function NetworkMonitor({ nic, width = "100%", height = "100%" }) {
                     type="monotone"
                     dataKey="sendRate"
                     stroke="#8884d8"
+                    strokeWidth={3}
                     dot={false}
                     isAnimationActive={false}
                   />
@@ -194,6 +195,7 @@ function NetworkMonitor({ nic, width = "100%", height = "100%" }) {
                     type="monotone"
                     dataKey="receiveRate"
                     stroke="#82ca9d"
+                    strokeWidth={3}
                     dot={false}
                     isAnimationActive={false}
                   />
